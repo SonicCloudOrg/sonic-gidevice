@@ -95,7 +95,10 @@ func (um *usbmux) Listen(devNotifier chan Device) (context.CancelFunc, error) {
 			select {
 			case <-ctx.Done():
 				return
-			case baseDev := <-baseDevNotifier:
+			case baseDev, ok := <-baseDevNotifier:
+				if !ok {
+					return
+				}
 				if baseDev.MessageType != libimobiledevice.MessageTypeDeviceAdd {
 					baseDev.Properties.DeviceID = baseDev.DeviceID
 				}
@@ -133,7 +136,7 @@ func (um *usbmux) listen(devNotifier chan libimobiledevice.BaseDevice) (ctx cont
 			default:
 				var respPkt libimobiledevice.Packet
 				if respPkt, err = um.client.ReceivePacket(); err != nil {
-					break
+					return
 				}
 
 				var replyDevice libimobiledevice.BaseDevice
